@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html lang="en" dir="ltr">
+    <head>
+        <meta charset="utf-8">
+        <title>George Partick Thomas III</title>
+        <link rel="stylesheet" type="text/css" href="/stylesheets/chatroom.css" />
+        <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+        <script src="/stylesheets/chatroom.js" type="text/javascript"></script>
+    </head>
+    <body>
+        <div id="nicknameModal" class="modal">
+            <div class="modalContent">
+              <span id="nicknameClose" class="modalClose">&times;</span>
+              <p>Choose a nickname. Must be 3-25 characters.</p>
+              <input type="text" id="nicknameInput">
+              <input type="button" id="nicknameBtn" class="clickable" value="Ok">
+            </div>
+        </div>
+        <div id="mainContainer">
+            <p id="nickname">Choose a nickname</p>
+            <h2>Turing Test</h2>
+            <p>by Ethan Genser</p>
+            <div id="chatContainer">
+                <div id="bannerContainer">
+                    <hr>
+                    <p id="bannerText">Press Connect to play!</p>
+                    <p id="room"></p>
+                    <hr>
+                </div>
+                <div id="messageContainer">
+                </div>
+                <input type="text" id="messageInput">
+
+                <input type="button" id="sendBtn" class="clickable" value="Send">
+            </div>
+            <input type="button" id="connectBtn" class="clickable" value="Connect">
+        </div>
+    </body>
+</html>
