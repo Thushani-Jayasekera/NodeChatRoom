@@ -11,6 +11,7 @@ var ROOM_STATE_INPROGRESS = 2;
 var ws = null;
 var nickname = "";
 var modalActive = false;
+var usersOnline = 1;
 
 // Listens for keys being typed
 document.addEventListener('keyup', function(e) {
@@ -129,6 +130,8 @@ function createConnection() {
         console.log(data);
         let message = JSON.parse(data);
 
+        updateUsersOnline(message.users);
+
         switch (message.type) {
             // Connection
             case MESSAGE_TYPE_CONNECTION:
@@ -227,6 +230,11 @@ function setBannerText(text) {
 
 function clearRoomDisplay() {
     document.getElementById("room").innerText = "";
+}
+
+function updateUsersOnline(users) {
+    usersOnline = users;
+    document.getElementById("userCount").innerHTML = usersOnline;
 }
 
 function mulberry32(a) {

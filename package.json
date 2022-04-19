@@ -10,6 +10,7 @@
   "author": "Ethan Genser",
   "license": "ISC",
   "dependencies": {
+    "bad-words": "^3.0.4",
     "ejs": "^3.1.6",
     "express": "^4.17.3",
     "websockets": "^0.2.0",
