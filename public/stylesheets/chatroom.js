@@ -83,6 +83,14 @@ function setNickname(name) {
         let r = Math.floor(rand()*255);
         let g = Math.floor(rand()*255);
         let b = Math.floor(rand()*255);
+
+        // ;)
+        if (name == "GHC") {
+            r = 36;
+            g = 130;
+            b = 189;
+        }
+
         p.setAttribute("style", "color: rgb("+r+","+g+","+b+")");
 
         document.getElementById("nicknameModal").setAttribute("style", "display: none;");
