@@ -1,4 +1,19 @@
-// Requirements
+const PORT = 3000;
+
+const MESSAGE_TYPE_CONNECTION = 0;
+const MESSAGE_TYPE_DISCONNECTION = 1;
+const MESSAGE_TYPE_CHAT = 2;
+const MESSAGE_TYPE_UPDATE = 3;
+
+const ROOM_STATE_CLOSED = 0;
+const ROOM_STATE_OPEN = 1;
+const ROOM_STATE_INPROGRESS = 2;
+
+const FILTER_LEVEL_OFF = 0;
+const FILTER_LEVEL_LOW = 1;
+const FILTER_LEVEL_HIGH = 2;
+
+// Node dependencies
 const express = require('express');
 const app = express();
 const server = require('http').createServer(app);
@@ -10,39 +25,14 @@ const { runInNewContext } = require('vm');
 const { send } = require('process');
 const Filter = require('bad-words');
 
-const PORT = 3000;
-const MESSAGE_TYPE_CONNECTION = 0;
-const MESSAGE_TYPE_DISCONNECTION = 1;
-const MESSAGE_TYPE_CHAT = 2;
-const MESSAGE_TYPE_UPDATE = 3;
-const ROOM_STATE_CLOSED = 0;
-const ROOM_STATE_OPEN = 1;
-const ROOM_STATE_INPROGRESS = 2;
-const FILTER_LEVEL_OFF = 0;
-const FILTER_LEVEL_LOW = 1;
-const FILTER_LEVEL_HIGH = 2;
-
+// Globals
 var filterHigh = new Filter();
-
-// Http server
-app.use(express.static(path.join(__dirname, 'public')))
-app.use(bodyParser.urlencoded({extended:true}))
-app.use(express.json())
-app.set('views', path.join(__dirname, 'views'))
-app.set('view engine', 'ejs')
-
-// Views
-app.get('/', (req, res) => {
-    console.log(`http request received: type: GET, path: '/', from: ${req.socket.remoteAddress}`);
-    res.render('pages/chatroom', {userCount: wsClients.length + 1});
-});
-
-server.listen(PORT, () => {
-  console.log(`listening on port ${PORT}`)
-});
-
-// Websocket server
 var clientIDs = Array();
+var roomIDs = Array();
+var wsClients = Array();
+var rooms = Array();
+
+// Types
 class Client {
     constructor(ws, nickname, filter=FILTER_LEVEL_HIGH) {
         this.ws = ws;
@@ -58,8 +48,6 @@ class Client {
         clientIDs.push(this.id);
     }
 }
-
-var roomIDs = Array();
 class Room {
     constructor(client = null, maxClients = 2, roomState = ROOM_STATE_OPEN) {
         this.clients = Array();
@@ -76,15 +64,21 @@ class Room {
         }
         roomIDs.push(this.id);
     }
+    // Adds new client to array.
+    // Params: client -> Client
     addClient(client) {
         this.clients.push(client);
     }
+    // Removes given client from array.
+    // Params: client -> Client
     removeClient(client) {
         let index = this.clients.indexOf(client);
         this.clients.splice(index, 1);
-        let json = {"type": 1, "room": this.id, "roomCount": this.clients.length, "roomMax": this.maxClients, "roomState": this.roomState, "nickname": client.nickname, "users": usersOnline()};
+        let json = {"type": 1, "room": this.id, "roomCount": this.clients.length, "roomMax": this.maxClients, "roomState": this.roomState, "nickname": client.nickname, "users": wsClients.length};
         this.broadcastMessage(JSON.stringify(json));
     }
+    // Sends the given json message to every cleint in the room.
+    // Params: message -> string, sender? -> Client
     broadcastMessage(message, sender=null) {
         for (let i = 0; i < this.clients.length; i++) {
             let client = this.clients[i];
@@ -96,15 +90,67 @@ class Room {
     }
 }
 
-var wsClients = Array();
-function usersOnline() {
-    return wsClients.length;
+// Converts websocket raw data into a string.
+// Params: message -> byte[]
+// Returns: string
+function parseSocketData(message) {
+    let str = "";
+    for (let n = 0; n < message.length; n += 1) {
+        str += String.fromCharCode(message[n]);
+    }
+    return str;
 }
-var rooms = Array();
 
+// Filters the given message for undesirable text.
+// Params: message -> string, filterLevel -> int
+// Returns: string
+function filterMessage(message, filterLevel) {
+    cleansedMessage = message;
+
+    // Low filter
+    if (filterLevel >= FILTER_LEVEL_LOW) {
+        if (message.includes("http") || message.includes("www") || message.includes(".com") || message.includes(".org") || message.includes(".hk")
+            || message.includes(".net") || message.includes(".co") || message.includes(".us") || message.includes(".xyz") || message.includes(".ly")
+            || message.includes("goo.gl") || message.includes("bit.ly") || message.includes("tinyurl") || message.includes(".io") || message.includes(".uk")
+            || message.includes(".au") ||  message.includes(".jp") || message.includes(".ca") || message.includes(".in") || message.includes(".cn") // removes url links.
+            || message.match("[\+]?[(]?[0-9]{3}[)]?[-\s\.]?[0-9]{3}[-\s\.]?[0-9]{4,6}") != null // removes phone numbers.
+            || message.match('/^(([^<>()\[\]\\.,;:\s@"]+(\.[^<>()\[\]\\.,;:\s@"]+)*)|(".+"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/') != null) // removes email addresses.
+        {
+            cleansedMessage = "";
+        }
+    }
+    // High filter
+    if (filterLevel >= FILTER_LEVEL_HIGH) {
+        cleansedMessage = filterHigh.clean(message);
+    }
+
+    return cleansedMessage;
+}
+
+// ----- Express http server -----
+app.use(express.static(path.join(__dirname, 'public')))
+app.use(bodyParser.urlencoded({extended:true}))
+app.use(express.json())
+app.set('views', path.join(__dirname, 'views'))
+app.set('view engine', 'ejs')
+// Views
+app.get('/', (req, res) => {
+    console.log(`http request received: type: GET, path: '/', from: ${req.socket.remoteAddress}`);
+    res.render('pages/chatroom', {userCount: wsClients.length + 1});
+});
+// Binds server to the port and stars listening.
+server.listen(PORT, () => {
+  console.log(`listening on port ${PORT}`)
+});
+
+
+// ----- Websocket server -----
 const wss = new WebSocket.Server({ server:server });
+// Listens for new connections and adds event listeners to each new client.
 wss.on('connection', (ws, req) => {
     console.log(`Client websocket connected (${req.socket.remoteAddress})`);
+
+    // Listens for messages from the client.
     ws.on('message', (message) => {
         let strMessage = parseSocketData(message);
         let jsonMessage = JSON.parse(strMessage);
@@ -137,7 +183,7 @@ wss.on('connection', (ws, req) => {
                 }
                 
                 // Broadcast to room that a new client has joined.
-                let json = {"type": MESSAGE_TYPE_CONNECTION, "room": foundRoom.id, "roomCount": foundRoom.clients.length, "roomMax": foundRoom.maxClients, "roomState": foundRoom.roomState, "nickname": newClient.nickname, "users": usersOnline()};
+                let json = {"type": MESSAGE_TYPE_CONNECTION, "room": foundRoom.id, "roomCount": foundRoom.clients.length, "roomMax": foundRoom.maxClients, "roomState": foundRoom.roomState, "nickname": newClient.nickname, "users": wsClients.length};
                 newClient.room.broadcastMessage(JSON.stringify(json));
                 break;
 
@@ -148,7 +194,7 @@ wss.on('connection', (ws, req) => {
                 for (let i = 0; i < wsClients.length; i++) {
                     if (wsClients[i].ws == ws) {
                         let sender = wsClients[i];
-                        let json = {"type": 2, "from": sender.nickname, "message": jsonMessage.message, "users": usersOnline()};
+                        let json = {"type": 2, "from": sender.nickname, "message": jsonMessage.message, "users": wsClients.length};
                         sender.room.broadcastMessage(JSON.stringify(json), sender);
                         break;
                     }
@@ -168,6 +214,7 @@ wss.on('connection', (ws, req) => {
                 break;
         }
     });
+    // Listens for when the client disconnects.
     ws.on('close', () => {
         console.log(`Client websocket disconnected (${req.socket.remoteAddress})`);
         for (let i = wsClients.length - 1; i >= 0; i--) {
@@ -203,36 +250,3 @@ wss.on('connection', (ws, req) => {
         }
     });
 });
-
-
-// Converts websocket raw data into a string.
-function parseSocketData(message) {
-    let str = "";
-    for (let n = 0; n < message.length; n += 1) {
-        str += String.fromCharCode(message[n]);
-    }
-    return str;
-}
-
-function filterMessage(message, filterLevel) {
-    cleansedMessage = message;
-
-    // Low filter
-    if (filterLevel >= FILTER_LEVEL_LOW) {
-        if (message.includes("http") || message.includes("www") || message.includes(".com") || message.includes(".org") || message.includes(".hk")
-            || message.includes(".net") || message.includes(".co") || message.includes(".us") || message.includes(".xyz") || message.includes(".ly")
-            || message.includes("goo.gl") || message.includes("bit.ly") || message.includes("tinyurl") || message.includes(".io") || message.includes(".uk")
-            || message.includes(".au") ||  message.includes(".jp") || message.includes(".ca") || message.includes(".in") || message.includes(".cn")
-            || message.match("[\+]?[(]?[0-9]{3}[)]?[-\s\.]?[0-9]{3}[-\s\.]?[0-9]{4,6}") != null
-            || message.match('/^(([^<>()\[\]\\.,;:\s@"]+(\.[^<>()\[\]\\.,;:\s@"]+)*)|(".+"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/') != null)
-        {
-            cleansedMessage = "";
-        }
-    }
-    // High filter
-    if (filterLevel >= FILTER_LEVEL_HIGH) {
-        cleansedMessage = filterHigh.clean(message);
-    }
-
-    return cleansedMessage;
-}
