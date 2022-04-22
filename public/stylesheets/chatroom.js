@@ -137,7 +137,7 @@ function createConnection() {
                 addMessage(`${message.nickname} joined.`);
                 // Updates banner to show the user has been connected
                 if (message.roomCount > 1) {
-                    setBannerText("You have been connected to another user! ...or have you \u{1f440}");
+                    setBannerText("You have been connected to another user!");
                 }
                 else {
                     setBannerText("\u{1F310} Searching for other user...");
