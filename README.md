@@ -1,22 +1,21 @@
 # Chatroom
-W.I.P. WebSocket-based chatroom application with Node.js + Express.js backend
+WebSocket-based chatroom application with Node.js + Express.js backend
 
 ![Cover](https://i.imgur.com/0I5RSGE.png)
 
-## Message protocol
-**message type codes**
-- CONNECTION = 0
-- DISCONNECTION = 1
-- CHAT = 2
-- UPDATE = 3
+## Prerequisites
 
-**server-to-client formats**
-- **room connection:** {"type": 0, "room": \<room\>, "roomCount": \<roomCount\>, "roomMax": \<roomMax\>, "roomState": \<roomState\>, "nickname": "\<nickname\>"}
-- **room disconnection:** {"type": 1, "room": \<room\>, "roomCount": \<roomCount\>, "roomMax": \<roomMax\>, "roomState": \<roomState\>, "nickname": "\<nickname\>"} 
-- **chat relay:** {"type": 2, "from": "\<sender\>", "message": "\<message\>"}
+Before you can run this program, ensure that you have the following software installed and functional:
+* Node.js v10.19.0 or newer
+* All necessary Node package dependencies as listed in [package-lock.json](package-lock.json). (note: you can install all dependencies by running the command `npm install`.
+ 
+## Running
+1. Download the source code from this repository.
+2. In the project root, run the command `npm start` to start the server.
+3. Open a browser, type 'localhost:3000' into the url bar, and press enter.
+4. Set the username for the new client by clicking 'Choose a nickname' in the top-right corner of the page. Then press the connect button at the bottom of the page to connect to the websocket server and be placed in a room.
+5. To talk with another instance of the client, repeat steps 3-4 in a new tab, window, or browser.
 
-**client-to-server formats**
-- **established connection:** {"type": 0, "nickname": "\<nickname\>", "message": "\<message\>"}
-- **disconnecting:** {"type": 1, "message": "\<message\>"}
-- **chat:** {"type": 2, "message": "\<message\>"}
-- **update user settings:** {"type": 3, "nickname": "\<nickname\>", "filter": \<Integer 0-2\>}
+## Authors
+
+* [**Ethan Genser**](https://github.com/Ethan-Genser) - *Creator*
