@@ -1,7 +1,7 @@
 # Chatroom
 W.I.P. WebSocket-based chatroom application with Node.js + Express.js backend
 
-![Cover](https://i.imgur.com/vL00o5b.png)
+![Cover](https://i.imgur.com/0I5RSGE.png)
 
 ## Message protocol
 **message type codes**
