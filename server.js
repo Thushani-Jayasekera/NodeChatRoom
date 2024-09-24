@@ -214,6 +214,9 @@ wss.on('connection', (ws, req) => {
                 break;
         }
     });
+    ws.on('error', (error) => {
+        console.error('WebSocket error:', error);
+    });
     // Listens for when the client disconnects.
     ws.on('close', () => {
         console.log(`Client websocket disconnected (${req.socket.remoteAddress})`);

@@ -1,5 +1,5 @@
 const PORT = 9090;
-const SERVER = "ws://localhost"; // wss -> secure production, ws -> local development
+const SERVER = "wss://61fc25eb-66b2-4f09-8b21-68fee9e0e03f-dev.e1-us-east-azure.choreoapis.dev/mediationproject/nodechatapp/v1.0/"; // wss -> secure production, ws -> local development
 
 const MESSAGE_TYPE_CONNECTION = 0;
 const MESSAGE_TYPE_DISCONNECTION = 1;
@@ -115,7 +115,7 @@ function sendMessage(message) {
 
 // Establishes a connection to the websocket server and adds websocket event listeners.
 function createConnection() {
-    ws = new WebSocket(`${SERVER}:${PORT}`);
+    ws = new WebSocket(`${SERVER}`);
 
     // On connection
     ws.addEventListener("open", () => {
