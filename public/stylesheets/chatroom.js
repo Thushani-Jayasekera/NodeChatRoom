@@ -1,4 +1,4 @@
-const PORT = 3000;
+const PORT = 9090;
 const SERVER = "ws://localhost"; // wss -> secure production, ws -> local development
 
 const MESSAGE_TYPE_CONNECTION = 0;
