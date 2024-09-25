@@ -7,7 +7,6 @@
     "test": "echo \"Error: no test specified\" && exit 1",
     "start": "node server.js"
   },
-  "author": "Ethan Genser",
   "license": "ISC",
   "dependencies": {
     "bad-words": "^3.0.4",
