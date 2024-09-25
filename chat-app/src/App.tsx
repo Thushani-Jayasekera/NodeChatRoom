@@ -1,12 +1,11 @@
+import React from "react";
 import { AuthProvider, useAuthContext } from "@asgardeo/auth-react";
 import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
 import Home from "./pages/Home";
-import Contact from "./pages/ChatRoom";
 import PageNotFound from "./pages/PageNotFound";
 import "./App.css";
 import Unauthenticated from "./pages/Unauthenticated";
 import { ReactNode, useEffect, useState } from "react";
-import React from "react";
 import ChatRoom from "./pages/ChatRoom";
 
 const authConfig = {

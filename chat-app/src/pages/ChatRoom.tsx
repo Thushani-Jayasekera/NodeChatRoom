@@ -61,7 +61,10 @@ const ChatRoom = ({
   };
 
   const createConnection = () => {
-    const socket = new WebSocket(`${SERVER}?token=${accessToken}`); // Pass the token in the URL
+    if (accessToken == undefined || accessToken == "") {
+        window.location.reload();
+    }
+    const socket = new WebSocket(`${SERVER}`, ["choreo-internal-API-Key", accessToken]);
     setWs(socket);
 
     socket.onopen = () => {
